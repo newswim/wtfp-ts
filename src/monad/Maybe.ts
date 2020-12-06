@@ -89,9 +89,17 @@ const maybeMonad: Monad<URI> = {
   URI,
   map,
   ap,
-  of,
-  chain,
+  of, // return, pure
+  chain, // bind, flatMap
 }
+
+//// Utilities
+
+const flatten = <A>(ma: Maybe<Maybe<A>>) =>
+  pipe(
+    ma,
+    maybeMonad.chain(x => x)
+  )
 
 //// Examples
 
@@ -123,3 +131,7 @@ const ex5 = pipe(
   just(1),
   maybeMonad.chain(n => maybeMonad.of(n + 1))
 )
+
+const ex6 = pipe(just(1), ap(just((n: number) => n + 1)))
+
+const ex7 = pipe(just(1), maybeMonad.of, flatten)
