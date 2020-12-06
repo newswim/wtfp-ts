@@ -61,6 +61,7 @@ const ap: Apply<URI>['ap'] = fab => fa => {
     return nothing
   }
 
+  // How is this different from say, pattern matching?
   const a = fa.a
 
   return pipe(
@@ -70,7 +71,7 @@ const ap: Apply<URI>['ap'] = fab => fa => {
 }
 
 // Applicative.of instance
-const of: Applicative<URI>['of'] = just
+const of: Applicative<URI>['of'] = just // that was easy
 
 // Chain.chain instance
 const chain: Chain<URI>['chain'] = afb => fa => {
@@ -83,6 +84,7 @@ const chain: Chain<URI>['chain'] = afb => fa => {
   return afb(a)
 }
 
+// Monad instance
 const maybeMonad: Monad<URI> = {
   URI,
   map,
@@ -90,6 +92,8 @@ const maybeMonad: Monad<URI> = {
   of,
   chain,
 }
+
+//// Examples
 
 const ex1 = pipe(
   nothing,
