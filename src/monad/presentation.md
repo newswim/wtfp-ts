@@ -88,3 +88,38 @@ export interface Chain<F> extends Apply<F> {
  */
 export interface Monad<F> extends Applicative<F>, Chain<F> {}
 ```
+
+## The "essence" of Monad
+
+A reasonable intuition is that a "monad" can be represented by the triple:
+
+    monad = [endofunctor, naturalTransformationOne, naturalTransformationTwo]
+
+### What is an endofunctor?
+
+```
+Functor {
+  map: a -> b -> f a -> f b
+}
+```
+
+```
+Endofunctor {
+  map: a -> a -> f a -> f a
+}
+```
+
+is `toString()` an endofunctor?
+
+```
+toString: nonNull -> string
+```
+
+### What are the natural transformations?
+
+They're whatever the natural transformations are for that endofunctor :)
+
+In practice, we represent these going "up" or "down" a heirarchy of endofunctors.
+
+Up == "return" (of/pure for Applicative)
+Down == "bind" (flatten/chain for Chain)

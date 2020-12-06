@@ -55,24 +55,7 @@ const maybeF: Functor<URI> = {
   map,
 }
 
-const ex1 = pipe(
-  nothing,
-  maybeF.map(n => n + 1)
-) //?
-
-const ex2 = pipe(
-  O.none,
-  O.map(n => n + 1)
-) //?
-
-const ex3 = pipe(
-  just(1),
-  just,
-  just,
-  maybeF.map(maybeF.map(maybeF.map(n => n + 1)))
-) //?
-
-// Apply instance
+// Apply.ap instance
 const ap: Apply<URI>['ap'] = fab => fa => {
   if (isNothing(fa)) {
     return nothing
@@ -86,10 +69,10 @@ const ap: Apply<URI>['ap'] = fab => fa => {
   )
 }
 
-// Applicative instance
+// Applicative.of instance
 const of: Applicative<URI>['of'] = just
 
-// Chain instance
+// Chain.chain instance
 const chain: Chain<URI>['chain'] = afb => fa => {
   if (isNothing(fa)) {
     return nothing
@@ -101,14 +84,38 @@ const chain: Chain<URI>['chain'] = afb => fa => {
 }
 
 const maybeMonad: Monad<URI> = {
-  of,
-  ap,
   URI,
   map,
+  ap,
+  of,
   chain,
 }
 
+const ex1 = pipe(
+  nothing,
+  maybeF.map(n => n + 1)
+)
+
+const ex2 = pipe(
+  O.none,
+  O.map(n => n + 1)
+)
+
+const ex3 = pipe(
+  just(1),
+  just,
+  just,
+  maybeF.map(maybeF.map(maybeF.map(n => n + 1)))
+)
+
 const ex4 = pipe(
+  just(1),
+  just,
+  just,
+  maybeF.map(maybeF.map(maybeF.map(n => n + 1)))
+)
+
+const ex5 = pipe(
   just(1),
   maybeMonad.chain(n => just(n + 1))
 )
