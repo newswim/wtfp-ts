@@ -1,0 +1,21 @@
+{
+  "name": "fp-ts-recipes",
+  "version": "0.0.0",
+  "description": "Fill me in",
+  "main": "build/index.js",
+  "author": "Dan Minshew (@newswim)",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "build": "ts-node ./build.ts"
+  },
+  "devDependencies": {
+    "esbuild": "^0.6.10",
+    "ts-node": "^8.10.2",
+    "typescript": "^4.0.0-beta"
+  },
+  "dependencies": {
+    "fp-ts": "^2.9.1",
+    "fp-ts-contrib": "^0.1.21"
+  }
+}
