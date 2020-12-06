@@ -2,9 +2,9 @@
 
 Learning about FP-TS can be a challenge. What even is it?
 
-1. It's an \_implementation of a higher-kinded type system in a language that doesn't naturally support one (TypeScript).
-2. It's a collection of "typeclasses" or "modules" which are typically supported by languages that also support HKTs.
-3. It's a collection of helper functions which operate on the typeclasses, in adition to more generalized helpers like `pipe`.
+1. It's an implementation of a higher-kinded type system in a language that doesn't naturally support one.
+2. It's a collection of "typeclasses" or "modules" which are typically shipped by languages with HKTs.
+3. It's a collection of helper functions which operate on the typeclasses, in adition to more generalized helpers.
 
 ### Learning Resources
 
