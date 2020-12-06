@@ -117,5 +117,5 @@ const ex4 = pipe(
 
 const ex5 = pipe(
   just(1),
-  maybeMonad.chain(n => just(n + 1))
+  maybeMonad.chain(n => maybeMonad.of(n + 1))
 )

@@ -117,9 +117,11 @@ toString: nonNull -> string
 
 ### What are the natural transformations?
 
-They're whatever the natural transformations are for that endofunctor :)
+They're whatever the natural transformations are for that endofunctor... :)
 
-In practice, we represent these going "up" or "down" a heirarchy of endofunctors.
+> In practice, we represent these going "up" or "down" a heirarchy of endofunctors.
 
+```
 Up == "return" (of/pure for Applicative)
 Down == "bind" (flatten/chain for Chain)
+```
