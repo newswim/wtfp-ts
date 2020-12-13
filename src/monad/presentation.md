@@ -125,3 +125,15 @@ They're whatever the natural transformations are for that endofunctor... :)
 Up == "return" (of/pure for Applicative)
 Down == "bind" (flatten/chain for Chain)
 ```
+
+### The "Maybe" monad
+
+- In a world of effectful programs, we may want to represent a notion of "failure"
+
+The essence of "Maybe"
+
+```ts
+if (isNothing(fa)) {
+  return nothing
+}
+```

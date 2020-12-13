@@ -99,6 +99,10 @@ const maybeMonad: Monad<URI> = {
   chain, // bind, flatMap
 }
 
+export const maybe: Monad<URI> = {
+  ...maybeMonad,
+}
+
 //// Utilities
 
 const _ = maybeMonad
@@ -110,9 +114,7 @@ const id = <A>(a: A) => a
  */
 const flatten = <A>(ma: Maybe<Maybe<A>>): Maybe<A> => pipe(ma, _.chain(id))
 
-const fold = <A, B>(onNothing: Lazy<B>, onJust: (a: A) => B) => (
-  ma: Maybe<A>
-): B => {
+const fold = <A, B>(onNothing: Lazy<B>, onJust: (a: A) => B) => (ma: Maybe<A>): B => {
   if (isNothing(ma)) {
     return onNothing()
   }
@@ -144,13 +146,18 @@ const getOrElse = <A>(a: Lazy<A>) => (ma: Maybe<A>): A => {
   return ma.a
 }
 
-const getOrElseW = <B>(b: Lazy<B>) => <A>(ma: Maybe<A>): A | B => {
+const getOrElseW: <B>(b: Lazy<B>) => <A>(ma: Maybe<A>) => A | B = b => ma => {
   if (isNothing(ma)) {
     return b()
   }
 
   return ma.a
 }
+
+export const getEq: <A>(eq: Eq<A>) => Eq<Maybe<A>> = eq => ({
+  equals: (mx, my) =>
+    mx === my || isNothing(mx) ? isNothing(my) : isNothing(my) ? false : eq.equals(mx.a, my.a),
+})
 
 const alt = <A>(mb: Lazy<Maybe<A>>) => (ma: Maybe<A>): Maybe<A> => {
   if (isNothing(ma)) {
@@ -170,7 +177,7 @@ const altW = <B>(mb: Lazy<Maybe<B>>) => <A>(ma: Maybe<A>): Maybe<A | B> => {
 
 // notice the implementation is the same, so we can just reuse the definition
 // while providing a different type declaration:
-const alt_: <A>(mb: Lazy<Maybe<A>>) => (ma: Maybe<A>) => Maybe<A> = altW
+const alt__: <A>(mb: Lazy<Maybe<A>>) => (ma: Maybe<A>) => Maybe<A> = altW
 
 // "lift" a 2-arity function into a "Maybe" operation
 const liftA2Maybe = <A, B, C>(f: (a: A) => (b: B) => C) => (ma: Maybe<A>) => (
