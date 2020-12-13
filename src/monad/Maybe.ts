@@ -1,10 +1,12 @@
 import { Functor } from './Functor'
-import { pipe } from 'fp-ts/lib/function'
+import { pipe, Lazy, Predicate } from 'fp-ts/lib/function'
 import * as O from 'fp-ts/lib/Option'
 import { Apply } from './Apply'
 import { Applicative } from './Applicative'
 import { Chain } from './Chain'
 import { Monad } from './Monad'
+import { Alt } from 'fp-ts/lib/Alt'
+import { Eq } from 'fp-ts/lib/Eq'
 
 const URI = 'Maybe'
 type URI = typeof URI
@@ -17,6 +19,7 @@ declare module 'fp-ts/HKT' {
 }
 
 // Type constructors
+
 interface Nothing {
   _tag: 'Nothing'
 }
@@ -29,16 +32,18 @@ interface Just<A> {
 type Maybe<A> = Nothing | Just<A>
 
 // Data constructors
+
 const nothing = { _tag: 'Nothing' } as Maybe<never>
 
 const just = <A>(a: A): Maybe<A> => ({ _tag: 'Just', a })
 
 // Guards
-const isNothing = <A>(ma: Maybe<A>): ma is Maybe<never> => ma._tag === 'Nothing'
+
+const isNothing = <A>(ma: Maybe<A>): ma is Nothing => ma._tag === 'Nothing'
 
 const isJust = <A>(ma: Maybe<A>): ma is Just<A> => ma._tag === 'Just'
 
-// @map for Maybe
+// Maybe.map
 const map: <A, B>(f: (a: A) => B) => (fa: Maybe<A>) => Maybe<B> = f => fa => {
   if (isNothing(fa)) {
     return nothing
@@ -50,30 +55,32 @@ const map: <A, B>(f: (a: A) => B) => (fa: Maybe<A>) => Maybe<B> = f => fa => {
 }
 
 // Functor instance
+
 const maybeF: Functor<URI> = {
   URI,
   map,
 }
 
-// Apply.ap instance
+// Maybe.ap instance
+
 const ap: Apply<URI>['ap'] = fab => fa => {
-  if (isNothing(fa)) {
+  if (isNothing(fa) || isNothing(fab)) {
     return nothing
   }
 
   // How is this different from say, pattern matching?
   const a = fa.a
+  const ab = fab.a
 
-  return pipe(
-    fab,
-    maybeF.map(ab => ab(a))
-  )
+  return just(ab(a))
 }
 
-// Applicative.of instance
+// Maybe.of instance
+
 const of: Applicative<URI>['of'] = just // that was easy
 
-// Chain.chain instance
+// Maybe.chain instance
+
 const chain: Chain<URI>['chain'] = afb => fa => {
   if (isNothing(fa)) {
     return nothing
@@ -95,17 +102,82 @@ const maybeMonad: Monad<URI> = {
 
 //// Utilities
 
-const flatten = <A>(ma: Maybe<Maybe<A>>) =>
-  pipe(
-    ma,
-    maybeMonad.chain(x => x)
-  )
+const _ = maybeMonad
+
+const id = <A>(a: A) => a
+
+/**
+ * The `flatten` function, called "join" in Haskell
+ */
+const flatten = <A>(ma: Maybe<Maybe<A>>) => pipe(ma, _.chain(id))
+
+const fold = <A, B>(onNothing: Lazy<B>, onJust: (a: A) => B) => (
+  ma: Maybe<A>
+): B => {
+  if (isNothing(ma)) {
+    return onNothing()
+  }
+
+  return onJust(ma.a)
+}
+
+const elem = <A>(eqa: Eq<A>) => (a: A) => (ma: Maybe<A>): boolean => {
+  if (isNothing(ma)) {
+    return false
+  }
+
+  return eqa.equals(ma.a, a)
+}
+
+const exists = <A>(p: Predicate<A>) => (ma: Maybe<A>): boolean => {
+  if (isNothing(ma)) {
+    return false
+  }
+
+  return p(ma.a)
+}
+
+const getOrElse = <A>(a: Lazy<A>) => (ma: Maybe<A>): A => {
+  if (isNothing(ma)) {
+    return a()
+  }
+
+  return ma.a
+}
+
+const getOrElseW = <B>(b: Lazy<B>) => <A>(ma: Maybe<A>): A | B => {
+  if (isNothing(ma)) {
+    return b()
+  }
+
+  return ma.a
+}
+
+const alt = <A>(mb: Lazy<Maybe<A>>) => (ma: Maybe<A>): Maybe<A> => {
+  if (isNothing(ma)) {
+    return mb()
+  }
+
+  return ma
+}
+
+const altW = <B>(mb: Lazy<Maybe<B>>) => <A>(ma: Maybe<A>): Maybe<A | B> => {
+  if (isNothing(ma)) {
+    return mb()
+  }
+
+  return ma
+}
+
+// notice the implementation is the same, so we can just reuse the definition
+// while providing a different type declaration:
+const alt_: <A>(mb: Lazy<Maybe<A>>) => (ma: Maybe<A>) => Maybe<A> = altW
 
 //// Examples
 
 const ex1 = pipe(
   nothing,
-  maybeF.map(n => n + 1)
+  _.map(n => n + 1)
 )
 
 const ex2 = pipe(
@@ -113,25 +185,15 @@ const ex2 = pipe(
   O.map(n => n + 1)
 )
 
-const ex3 = pipe(
-  just(1),
-  just,
-  just,
-  maybeF.map(maybeF.map(maybeF.map(n => n + 1)))
-)
+const ex3 = pipe(just(1), just, just, _.map(_.map(_.map(n => n + 1))))
 
-const ex4 = pipe(
-  just(1),
-  just,
-  just,
-  maybeF.map(maybeF.map(maybeF.map(n => n + 1)))
-)
+const ex4 = pipe(just(1), just, just, _.chain(_.chain(_.map(n => n + 1))))
 
 const ex5 = pipe(
   just(1),
-  maybeMonad.chain(n => maybeMonad.of(n + 1))
+  _.chain(n => _.of(n + 1))
 )
 
 const ex6 = pipe(just(1), ap(just((n: number) => n + 1)))
 
-const ex7 = pipe(just(1), maybeMonad.of, flatten)
+const ex7 = pipe(just(1), _.of, flatten)
