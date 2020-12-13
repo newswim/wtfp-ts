@@ -5,7 +5,6 @@ import { Apply } from './Apply'
 import { Applicative } from './Applicative'
 import { Chain } from './Chain'
 import { Monad } from './Monad'
-import { Alt } from 'fp-ts/lib/Alt'
 import { Eq } from 'fp-ts/lib/Eq'
 
 const URI = 'Maybe'
@@ -109,7 +108,7 @@ const id = <A>(a: A) => a
 /**
  * The `flatten` function, called "join" in Haskell
  */
-const flatten = <A>(ma: Maybe<Maybe<A>>) => pipe(ma, _.chain(id))
+const flatten = <A>(ma: Maybe<Maybe<A>>): Maybe<A> => pipe(ma, _.chain(id))
 
 const fold = <A, B>(onNothing: Lazy<B>, onJust: (a: A) => B) => (
   ma: Maybe<A>
@@ -173,6 +172,20 @@ const altW = <B>(mb: Lazy<Maybe<B>>) => <A>(ma: Maybe<A>): Maybe<A | B> => {
 // while providing a different type declaration:
 const alt_: <A>(mb: Lazy<Maybe<A>>) => (ma: Maybe<A>) => Maybe<A> = altW
 
+// "lift" a 2-arity function into a "Maybe" operation
+const liftA2Maybe = <A, B, C>(f: (a: A) => (b: B) => C) => (ma: Maybe<A>) => (
+  mb: Maybe<B>
+): Maybe<C> => {
+  if (isNothing(ma) || isNothing(mb)) {
+    return nothing
+  }
+
+  const a = ma.a
+  const b = mb.a
+
+  return of(f(a)(b))
+}
+
 //// Examples
 
 const ex1 = pipe(
@@ -197,3 +210,7 @@ const ex5 = pipe(
 const ex6 = pipe(just(1), ap(just((n: number) => n + 1)))
 
 const ex7 = pipe(just(1), _.of, flatten)
+
+const f = (n: number) => (s: string) => s.length + n
+
+const ex8 = liftA2Maybe(f)(just(1))(just('hi'))
