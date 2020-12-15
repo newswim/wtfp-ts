@@ -55,7 +55,7 @@ const map: <A, B>(f: (a: A) => B) => (fa: Maybe<A>) => Maybe<B> = f => fa => {
 
 // Functor instance
 
-const maybeF: Functor<URI> = {
+export const MaybeFunctor: Functor<URI> = {
   URI,
   map,
 }
@@ -205,19 +205,22 @@ const ex2 = pipe(
   O.map(n => n + 1)
 )
 
-const ex3 = pipe(just(1), just, just, _.map(_.map(_.map(n => n + 1))))
+const ex3 = pipe(just(1), just, just, map(map(map(n => n + 1))))
 
-const ex4 = pipe(just(1), just, just, _.chain(_.chain(_.map(n => n + 1))))
+const ex4 = pipe(just(1), just, just, chain(chain(map(n => n + 1))))
 
 const ex5 = pipe(
   just(1),
-  _.chain(n => _.of(n + 1))
+  chain(n => of(n + 1))
 )
 
 const ex6 = pipe(just(1), ap(just((n: number) => n + 1)))
 
-const ex7 = pipe(just(1), _.of, flatten)
+const ex7 = pipe(just(1), of, flatten)
 
 const f = (n: number) => (s: string) => s.length + n
 
-const ex8 = liftA2Maybe(f)(just(1))(just('hi'))
+const ex8 = liftA2Maybe(f)(of(1))(of('hi'))
+
+const l = chain(chain(of))
+const g = flatten

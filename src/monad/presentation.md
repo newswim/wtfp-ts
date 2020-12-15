@@ -2,9 +2,9 @@ In FP-TS
 
 ```ts
 /**
- * A Functor is a type constructor which supports a mapping operation, @map
+ * A Functor is a type constructor which supports a mapping operation
  *
- * @map turns functions (a -> b) into (f a -> f b)
+ * `map` turns functions (a -> b) into (f a -> f b)
  * `f` represents "some computational context"
  *
  * Instances must satisfy the following laws:
@@ -13,7 +13,7 @@ In FP-TS
  * 2. Composition: `F.map(fa, a => bc(ab(a))) <-> F.map(F.map(fa, ab), bc)`
  *
  */
-export interface Functor<F> {
+interface Functor<F> {
   readonly URI: F
   readonly map: <A, B>(fa: HKT<F, A>, f: (a: A) => B) => HKT<F, B>
 }
@@ -27,14 +27,14 @@ export interface Functor<F> {
  *
  * 1. Associative composition:
  * F.ap(F.ap(F.map(fbc, bc => ab => a => bc(ab(a))), fab), fa)
- *                            ==
+ *                            =~=
  *                   F.ap(fbc, F.ap(fab, fa))
  *
- * Formally, `Apply` represents a strong lax semi-monoidal endofunctor. 🙄
+ * Formally, `Apply` represents a strong lax semi-monoidal endofunctor.
  *
  */
-export interface Apply<F> extends Functor<F> {
-  readonly ap: <A, B>(fab: HKT<F, (a: A) => B>, fa: HKT<F, A>) => HKT<F, B>
+interface Apply<F> extends Functor<F> {
+  readonly ap: <A, B>(fab: Kind<F, (a: A) => B>, fa: Kind<F, A>) => Kind<F, B>
 }
 
 /**
@@ -56,8 +56,8 @@ export interface Apply<F> extends Functor<F> {
  *
  * @since 2.0.0
  */
-export interface Applicative<F> extends Apply<F> {
-  readonly of: <A>(a: A) => HKT<F, A>
+interface Applicative<F> extends Apply<F> {
+  readonly of: <A>(a: A) => Kind<F, A>
 }
 
 /**
@@ -70,8 +70,8 @@ export interface Applicative<F> extends Apply<F> {
  *
  * Note. `Apply`'s `ap` can be derived: `(fab, fa) => F.chain(fab, f => F.map(fa, f))`
  */
-export interface Chain<F> extends Apply<F> {
-  readonly chain: <A, B>(fa: HKT<F, A>, f: (a: A) => HKT<F, B>) => HKT<F, B>
+interface Chain<F> extends Apply<F> {
+  readonly chain: <A, B>(fa: Kind<F, A>, f: (a: A) => Kind<F, B>) => Kind<F, B>
 }
 
 /**
@@ -86,33 +86,7 @@ export interface Chain<F> extends Apply<F> {
  *
  * Note. `Functor`'s `map` can be derived: `A.map = (fa, f) => A.chain(fa, a => A.of(f(a)))`
  */
-export interface Monad<F> extends Applicative<F>, Chain<F> {}
-```
-
-## The "essence" of Monad
-
-A reasonable intuition is that a "monad" can be represented by the triple:
-
-    monad = [endofunctor, naturalTransformationOne, naturalTransformationTwo]
-
-### What is an endofunctor?
-
-```
-Functor {
-  map: a -> b -> f a -> f b
-}
-```
-
-```
-Endofunctor {
-  map: a -> a -> f a -> f a
-}
-```
-
-is `toString()` an endofunctor?
-
-```
-toString: nonNull -> string
+interface Monad<F> extends Applicative<F>, Chain<F> {}
 ```
 
 ### What are the natural transformations?
@@ -122,8 +96,8 @@ They're whatever the natural transformations are for that endofunctor... :)
 > In practice, we represent these going "up" or "down" a heirarchy of endofunctors.
 
 ```
-Up == "return" (of/pure for Applicative)
-Down == "bind" (flatten/chain for Chain)
+Up   == "return" (of/pure for Applicative)
+Down == "bind"   (flatten/chain for Chain)
 ```
 
 ### The "Maybe" monad
@@ -137,3 +111,43 @@ if (isNothing(fa)) {
   return nothing
 }
 ```
+
+### Variations in Haskell
+
+Haskell has several operators which operate on Monads/Functors.
+
+```
+| sym  | pronunciation                      | signature                             |
+| ---- | ---------------------------------- | ------------------------------------- |
+| <=<  | "left fish"                         | (b -> m c) -> (a -> m b) -> a -> m c  |
+| >=>  | "right fish"                        | (a -> m b) -> (b -> m c) -> a -> m c  |
+| >>=  | "bind" or "sequence"               | m a -> (a -> m b) -> m b              |
+| <*>  | "ap" or "apply"                    | f (a -> b) -> f a -> f b              |
+| <|>  | "or", "alt", or "alternative"      | f a -> f a -> f a                     |
+| <$>  | "fmap", "functor map", "infix map"  | (a -> b) -> f a -> f b                |
+```
+
+### Monad laws
+
+```
+# bind
+
+return a >>= k                  =  k a
+m        >>= return             =  m
+m        >>= (\x -> k x >>= h)  =  (m >>= k) >>= h
+
+
+# left fish
+f <=< (g <=< h) === (f <=< g) <=< h
+
+```
+
+### Resources:
+
+- [Category Theory 10.1: Monads - Bartosz Milewski - YouTube](https://www.youtube.com/watch?v=gHiyzctYqZ0)
+- [Brian Beckman: Don’t fear the Monad - YouTube](https://www.youtube.com/watch?v=ZhuHCtR3xq8)
+- [Fantas, Eel, and Specification 15: Monad · Tom Harding](http://www.tomharding.me/2017/06/05/fantas-eel-and-specification-15/)
+- [A Fistful of Monads - Learn You a Haskell for Great Good!](http://learnyouahaskell.com/a-fistful-of-monads)
+- [Getting started with fp-ts: Monad - DEV](https://dev.to/gcanti/getting-started-with-fp-ts-monad-6k)
+- Comprehending Monads: https://ncatlab.org/nlab/files/WadlerMonads.pdf (you’ll learn the relationship between list comprehensions and monads)
+- Monads for functional programming: https://homepages.inf.ed.ac.uk/wadler/papers/marktoberdorf/baastad.pdf
